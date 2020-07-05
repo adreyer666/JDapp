@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
 
 """
-Task list class and a task running class.
+Task for running command strings (Lunux CLI).
 
-Tasker is managing tasks in a job list, this is the public interface.
 CmdTask is executing tasks and fetching results.
 """
 
@@ -11,113 +10,7 @@ import os
 import stat
 import subprocess
 import re
-import json
-from uuid import uuid4
 from time import sleep
-from jd_lib import KeyValueDB
-
-# -------------- task queue -------------------------------------------------
-
-
-class Tasker():
-    """Task object class for async start/monitor of external jobs."""
-
-    verbose = 0
-    joblist = KeyValueDB(table='tasks')
-    queue = None
-    taskdir = None
-
-    def __init__(self, verbose=None):
-        """Update internal class default values if needed."""
-        if verbose:
-            self.verbose = verbose
-        # cwd = os.path.abspath(os.getcwd())
-        # cwd = os.getcwd()
-        cwd = '.'
-        self.taskdir = os.sep.join([cwd, "tasks"])
-        try:
-            os.stat(self.taskdir)
-        except FileNotFoundError as err:
-            if self.verbose:
-                print('Taskdir does not exist, creating it.')
-            if self.verbose > 2:
-                print(err)
-            os.mkdir(self.taskdir)
-
-    def _uuid(self) -> str:
-        """Create new UUID as string."""
-        uuid = str(uuid4())
-        if self.verbose > 1:
-            print("New UUID: ", uuid)
-        return uuid
-
-    def _job_update(self, job):
-        """Store/update job in DB."""
-        if self.verbose:
-            print("Update: ", job)
-        self.joblist.set(job['uuid'], json.dumps(job))
-
-    def _job_query(self, uuid=None):
-        """Query DB for job['uuid']."""
-        if uuid is None:
-            uuids = list()
-            for k in self.joblist.get():
-                # print("K: ",k)
-                result = self.joblist.get(k)
-                # print("R: ",result)
-                if result is None:
-                    return None
-                value = json.loads(result['value'])
-                # print("V: ", value)
-                if value['status'] == 'running':
-                    uuids.append(k)
-            return uuids
-        if self.verbose:
-            print("Query: ", uuid)
-        res = self.joblist.get(uuid)
-        if res is None:
-            return None
-        return json.loads(res['value'])
-
-    def add(self, params):
-        """Add new task to job list."""
-        job = {
-            "uuid": self._uuid(),
-            "params": params,
-            "status": 'created'
-        }
-        job["location"] = os.sep.join([self.taskdir, job['uuid']])
-        self._job_update(job)
-        cmd_task = CmdTask(job)
-        pid = cmd_task.run()
-        if pid is None:
-            return None
-        if pid:
-            job['status'] = 'running'
-            self._job_update(job)
-        return job['uuid']
-
-    def fixer(self):
-        """Go through running tasks in job list and update status."""
-        for uuid in self._job_query():
-            job = self._job_query(uuid)
-            cmd_task = CmdTask(job)
-            taskstate = cmd_task.status()
-            job['status'] = taskstate['status']
-            self._job_update(job)
-
-    def status(self, uuid=None, verbose=False):
-        """Fetch status of a given task from job list."""
-        if uuid is None:
-            return self._job_query()
-        job = self._job_query(uuid)
-        cmd_task = CmdTask(job)
-        taskstate = cmd_task.status(verbose=verbose)
-        job['status'] = taskstate['status']
-        self._job_update(job)
-        if verbose:
-            taskstate['job'] = job
-        return taskstate
 
 # --------- task object ------------------------------------------------------
 
@@ -130,9 +23,9 @@ class CmdTask():
         'options': r"[^\d\w\t /.,'\"]",
     }
 
-    def __init__(self, newtask, verbose=None):
+    def __init__(self, newtask=None, verbose=None):
         """Update internal class default values if needed."""
-        if task is None:
+        if newtask is None:
             return
         if verbose:
             self.verbose = verbose
@@ -228,11 +121,11 @@ class CmdTask():
         os.chmod(self.task['cmdfile'], file_mode)
         if self.verbose:
             print("Job", self.task)
-        pid = subprocess.Popen([self.task['cmdfile'], ]).pid
+        cmd_pid = subprocess.Popen([self.task['cmdfile'], ]).pid
         if self.verbose:
-            print("Pid: {}".format(pid))
+            print("Pid: {}".format(cmd_pid))
         sleep(0.5)
-        return pid
+        return cmd_pid
 
     def status(self, verbose=False) -> dict:
         """Determine status of a task."""
@@ -256,17 +149,15 @@ class CmdTask():
 # --------- main -------------------------------------------------------------
 
 if __name__ == '__main__':
-    x = Tasker()
     task = {
         "command": "echo",            # safe command only! sanity checks first!
         "options": "hello world"      # sofe options/parameters only!
     }
-    tid = x.add(task)
+    x = CmdTask(task)
+    pid = x.run()
     # always check return value!
-    if tid is None:
+    if pid is None:
         print("Task aborted")
-    print("Tasks running: {}".format(len(x.status())))
-    if tid is not None:
-        print("Task status:   {}".format(x.status(tid)))
-        print("Tasks running: {}".format(len(x.status())))
-        print("Task verbose status:\n{}".format(x.status(tid, verbose=True)))
+    if pid is not None:
+        print("Task status:   {}".format(x.status()))
+        print("Task verbose status:\n{}".format(x.status(verbose=True)))

@@ -8,7 +8,7 @@ Provided for testing purposes only.
 
 from flask import request
 from flask_restx import Resource, reqparse
-# from JDlib import DataDB, Tasker
+# from jd_lib import DataDB, TaskMgr
 
 # --------- restful class --------------------------------------------------
 

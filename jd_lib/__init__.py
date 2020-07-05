@@ -4,10 +4,12 @@
 from .authdb import AuthDB
 from .datadb import DataDB
 from .keyvaluedb import KeyValueDB
-from .tasks import Tasker
+from .taskmgr import TaskMgr
+from .cmdtask import CmdTask
 
 if True is False:
     A = AuthDB()
     D = DataDB()
     K = KeyValueDB()
-    T = Tasker()
+    T = TaskMgr()
+    C = CmdTask()
