@@ -16,8 +16,8 @@ from flask import Flask, jsonify, make_response, request
 from flask_httpauth import HTTPBasicAuth, HTTPTokenAuth, MultiAuth
 from flask_restx import Resource, Api
 
-from JDlib import AuthDB, DataDB
-from JDmodules import items
+from jd_lib import AuthDB, DataDB
+from jd_modules import Items
 
 DB = 'file:app.db'
 TOKENKEY = 'eyJhbGciOiJIUzUxMiIsImlhdCI6MTU5MzM0MzQxMSwiZXhwIjoxNTkzMzQ3MDEx9Q'
@@ -83,6 +83,9 @@ class TopLevel(Resource):
     def __init__(self, *args, **kwargs):
         """Update internal class default values if needed."""
         self.debug = 0
+        if self.debug > 2:
+            print("args", args)
+            print("kwargs", kwargs)
         if 'entrypoint' in kwargs:
             self.entrypoint = kwargs['entrypoint']
         else:
@@ -129,6 +132,9 @@ class ApiTop(Resource):
         # else:
         #     self.debug = 0
         self.debug = 0
+        if self.debug > 2:
+            print("args", args)
+            print("kwargs", kwargs)
 
     def get(self):
         """Welcome greeting. Should need more info."""
@@ -187,7 +193,7 @@ if __name__ == '__main__':
                      resource_class_kwargs={'entrypoint': '/api/v1.0'})
     api.add_resource(ApiTop,
                      '/api/v1.0')
-    api.add_resource(items,
+    api.add_resource(Items,
                      '/api/v1.0/items',
                      '/api/v1.0/items/<int:id>',
                      resource_class_kwargs={

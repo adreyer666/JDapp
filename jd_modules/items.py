@@ -1,5 +1,11 @@
 #!/usr/bin/env python3
 
+"""
+Flask resource class storing items.
+
+Provided for testing purposes only.
+"""
+
 from flask import request
 from flask_restx import Resource, reqparse
 # from JDlib import DataDB, Tasker
@@ -7,9 +13,10 @@ from flask_restx import Resource, reqparse
 # --------- restful class --------------------------------------------------
 
 
-class items(Resource):
+class Items(Resource):
     """
     Test module with id/key/value DB storage backend.
+
     Simple class for testing purposes.
     """
 
@@ -22,11 +29,13 @@ class items(Resource):
         :param datadb:      backend database
         :returns str: An endpoint name
         """
-
         if 'verbose' in kwargs:
             self.verbose = kwargs['verbose']
         else:
             self.verbose = 0
+        if self.verbose > 2:
+            print("args", args)
+            print("kwargs", kwargs)
         if 'decorators' in kwargs:
             self.method_decorators = kwargs['decorators']
         else:
@@ -36,31 +45,31 @@ class items(Resource):
         else:
             self.datadb = None
 
-    def get(self, id=None):
+    def get(self, item_id=None):
         """
         Get item entry from DB.
 
-        :param id:      uniq item *id*
+        :param item_id:      uniq item *id*
         :returns str:   item value
         """
         if self.verbose:
-            print("get id:", id, "\nverbose:", self.verbose)
-        if id is None:
-            items = self.datadb.data_get_byid()
+            print("get id:", item_id, "\nverbose:", self.verbose)
+        if item_id is None:
+            item_list = self.datadb.data_get_byid()
         else:
-            items = self.datadb.data_get_byid(id)
-        if not items:
+            item_list = self.datadb.data_get_byid(item_id)
+        if not item_list:
             return {"error": "Not found "+request.url}, 404
-        return {"items": items}, 200
+        return {"items": item_list}, 200
 
-    def post(self, id=None):
+    def post(self, item_id=None):
         """Add item entry to DB."""
         parser = reqparse.RequestParser()
         parser.add_argument("name")
         parser.add_argument("value")
         args = parser.parse_args()
 
-        if id is not None:
+        if item_id is not None:
             return {"error": "Bad request"}, 400
         if self.datadb.data_get_byname(args['name']):
             return {"error": "Conflict"}, 409
@@ -69,31 +78,31 @@ class items(Resource):
         item['id'] = self.datadb.data_get_byname(args['name'])
         return {'item': item}, 201
 
-    def put(self, id=None):
+    def put(self, item_id=None):
         """Update item entry in DB."""
         parser = reqparse.RequestParser()
         parser.add_argument("name")
         parser.add_argument("value")
         args = parser.parse_args()
 
-        if id is None:
+        if item_id is None:
             return {"error": "Method Not Allowed"}, 405
-        item = self.datadb.data_get_byid(id)
+        item = self.datadb.data_get_byid(item_id)
         if not item:
             return {"error": "Not found "+request.url}, 404
         newitem = {
-            "id": id,
+            "id": item_id,
             "name": (args['name'] if args['name'] else item['name']),
             "value": (args['value'] if args['value'] else item['value'])
         }
         self.datadb.data_update(newitem)
         return {'item': newitem}, 200
 
-    def delete(self, id=None):
+    def delete(self, item_id=None):
         """Don't try to delete the application entry point."""
-        if id is None:
+        if item_id is None:
             return {"error": "Method Not Allowed"}, 405
-        item = self.datadb.data_get_byid(id)
+        item = self.datadb.data_get_byid(item_id)
         if not item:
             return {"error": "Not found "+request.url}, 404
         self.datadb.data_delete(id)
@@ -104,17 +113,14 @@ class items(Resource):
 
 # # creating the flask app
 # app = Flask(__name__)
-# # creating an API object
 # api = Api(app)
-# # creating authentication objects
-# app.config['SECRET_KEY'] = TOKENKEY
 # basic_auth = HTTPBasicAuth()
-# token_auth = HTTPTokenAuth('Bearer')
-# multi_auth = MultiAuth(basic_auth, token_auth)
 # datadb = DataDB(DB,'resource')
-#
-# # adding the defined resources along with their corresponding urls
-# api.add_resource(items, '/api/v1.0/items', '/api/v1.0/items/<int:id>')
+# api.add_resource(items, '/api/v1.0/items', '/api/v1.0/items/<int:id>',
+#                  resource_class_kwargs={
+#                      'datadb': datadb,
+#                      'decorators': [basic_auth.login_required]
+#                  })
 
 # --------- main -------------------------------------------------------------
 

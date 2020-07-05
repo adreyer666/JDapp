@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 
-from .items import items
-# from .docker import podman
-# from .k8s    import kubernetes
+"""Import submodules into one namespace."""
+from .items import Items
+# from .docker import Podman
+# from .k8s    import Kubernetes
 
-if False:
-    i = items
+if True is False:
+    i = Items
