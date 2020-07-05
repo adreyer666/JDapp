@@ -13,7 +13,7 @@ from flask_restx import Resource, reqparse
 # --------- restful class --------------------------------------------------
 
 
-class Items(Resource):
+class Podman(Resource):
     """
     Test module with id/key/value DB storage backend.
 
@@ -106,7 +106,7 @@ class Items(Resource):
         item = self.datadb.data_get_byid(item_id)
         if not item:
             return {"error": "Not found "+request.url}, 404
-        self.datadb.data_delete(item_id)
+        self.datadb.data_delete(id)
         return {}, 204
 
 

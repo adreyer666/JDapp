@@ -8,8 +8,8 @@ from .taskmgr import TaskMgr
 from .cmdtask import CmdTask
 
 if True is False:
-    A = AuthDB()
-    D = DataDB()
-    K = KeyValueDB()
-    T = TaskMgr()
-    C = CmdTask()
+    TestInit = AuthDB()
+    TestInit = DataDB()
+    TestInit = KeyValueDB()
+    TestInit = TaskMgr()
+    TestInit = CmdTask()

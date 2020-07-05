@@ -16,8 +16,11 @@ from flask import Flask, jsonify, make_response, request
 from flask_httpauth import HTTPBasicAuth, HTTPTokenAuth, MultiAuth
 from flask_restx import Resource, Api
 
-from jd_lib import AuthDB, DataDB
+from jd_lib import AuthDB, DataDB, TaskMgr
 from jd_modules import Items
+# from jd_modules import Podman
+from jd_modules.podman import Images as PodmanImages
+
 
 DB = 'file:app.db'
 TOKENKEY = 'eyJhbGciOiJIUzUxMiIsImlhdCI6MTU5MzM0MzQxMSwiZXhwIjoxNTkzMzQ3MDEx9Q'
@@ -186,6 +189,7 @@ app.config['SECRET_KEY'] = TOKENKEY
 if __name__ == '__main__':
     authdb = AuthDB(DB)
     datadb = DataDB(DB, 'resource')
+    taskmgr = TaskMgr()
 
     # creating an API object
     api = Api(app)
@@ -201,6 +205,21 @@ if __name__ == '__main__':
                      resource_class_kwargs={
                          'datadb': datadb,
                          'decorators': [multi_auth.login_required]
+                         }
+                     )
+    # api.add_resource(Podman,
+    #                  '/api/v1.0/podman',
+    #                  '/api/v1.0/podman/<path:subpath>',
+    #                  resource_class_kwargs={
+    #                      'decorators': [multi_auth.login_required]
+    #                      }
+    #                  )
+    api.add_resource(PodmanImages,
+                     '/api/v1.0/podman/images',
+                     '/api/v1.0/podman/images/<str:uuid>',
+                     resource_class_kwargs={
+                         'decorators': [multi_auth.login_required],
+                         'taskmgr': taskmgr
                          }
                      )
 
