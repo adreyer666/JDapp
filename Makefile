@@ -6,11 +6,11 @@ APPLICATION = jd_app
 # / ------ python stuff --------/ #
         REQ = requirements.txt
         APP = $(APPLICATION).py
-     PYLIBS = JDlib/*.py JDmodules/*.py
+     PYLIBS = jd_lib/*.py jd_modules/*.py
        DOCS = README.md
 
      APPTMP = tasks/ app.db
-     RUNENV = venv __pycache__ JDlib/__pycache__ JDmodules/__pycache__
+     RUNENV = venv __pycache__ jd_lib/__pycache__ jd_modules/__pycache__
 # / ------ python stuff --------/ #
 
       phony = prep run package clean
