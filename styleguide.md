@@ -7,11 +7,11 @@ Official Guides:
 
 ## most used python styles
 
-PascalCase
-camelCase
-snake_case
-UPPER_CASE
-kebab-case
+* PascalCase
+* camelCase
+* snake_case
+* UPPER_CASE
+* kebab-case
 
 ### use cases
 
