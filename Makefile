@@ -1,6 +1,6 @@
 #!env make
 
-APPLICATION = JDapp
+APPLICATION = jd_app
     VERSION = 0.1.0
 
 # / ------ python stuff --------/ #
@@ -28,6 +28,9 @@ venv: $(REQ)
 prep: venv
 	( . venv/bin/activate && pip install -r $(REQ) )
 
+edit: venv
+	( . venv/bin/activate && atom . )
+
 # $(APP):
 # $(PYLIBS):
 
@@ -41,4 +44,3 @@ clobber: clean
 
 clean:
 	-rm -r $(RUNENV)
-

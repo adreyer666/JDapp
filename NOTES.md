@@ -1,4 +1,4 @@
-# JDapp .. playing with API and tasks
+# Random notes
 
 ## API
 
@@ -12,16 +12,6 @@ Ref: <https://en.wikipedia.org/wiki/Create,_read,_update_and_delete>
 | Read (Retrieve)  | SELECT | GET                | GET        | read / take | Find    |
 | Update (Modify)  | UPDATE | PUT / POST / PATCH | PUT        | write       | Update  |
 | Delete (Destroy) | DELETE | DELETE             | DELETE     | dispose     | Remove  |
-
-Ref: <https://www.restapitutorial.com/lessons/httpmethods.html>
-
-| HTTP Verb | CRUD           | Entire Collection (e.g. /customers) Specific Item (e.g. /customers/{id}) |
-| :-------- | :------------- | :----------------------------------------------------------------------- |
-| POST      | Create         | 201 (Created), 'Location' header with link to /customers/{id} containing new ID. 404 (Not Found), 409 (Conflict) if resource already exists.. |
-| GET       | Read           | 200 (OK), list of customers. Use pagination, sorting and filtering to navigate big lists. 200 (OK), single customer. 404 (Not Found), if ID not found or invalid. |
-| PUT       | Update/Replace | 405 (Method Not Allowed), unless you want to update/replace every resource in the entire collection. 200 (OK) or 204 (No Content). 404 (Not Found), if ID not found or invalid. |
-| PATCH     | Update/Modify  | 405 (Method Not Allowed), unless you want to modify the collection itself. 200 (OK) or 204 (No Content). 404 (Not Found), if ID not found or invalid. |
-| DELETE    | Delete         | 405 (Method Not Allowed), unless you want to delete the whole collection--not often desirable. 200 (OK). 404 (Not Found), if ID not found or invalid. |
 
 ## API code and endpoints
 
@@ -37,6 +27,16 @@ To create a simple API you implement one or more HTTP methods, in this case the 
 @app.route('/api/v1.0/items/<int:id>', methods=['DELETE'])
 ```
 
+Ref: <https://www.restapitutorial.com/lessons/httpmethods.html>
+
+| HTTP Verb | CRUD           | Entire Collection (e.g. /customers) Specific Item (e.g. /customers/{id}) |
+| :-------- | :------------- | :----------------------------------------------------------------------- |
+| POST      | Create         | 201 (Created), 'Location' header with link to /customers/{id} containing new ID. 404 (Not Found), 409 (Conflict) if resource already exists.. |
+| GET       | Read           | 200 (OK), list of customers. Use pagination, sorting and filtering to navigate big lists. 200 (OK), single customer. 404 (Not Found), if ID not found or invalid. |
+| PUT       | Update/Replace | 405 (Method Not Allowed), unless you want to update/replace every resource in the entire collection. 200 (OK) or 204 (No Content). 404 (Not Found), if ID not found or invalid. |
+| PATCH     | Update/Modify  | 405 (Method Not Allowed), unless you want to modify the collection itself. 200 (OK) or 204 (No Content). 404 (Not Found), if ID not found or invalid. |
+| DELETE    | Delete         | 405 (Method Not Allowed), unless you want to delete the whole collection--not often desirable. 200 (OK). 404 (Not Found), if ID not found or invalid. |
+
 ## API testing tool:
 
 - [Postman](https://www.getpostman.com/) -- This tool basically allows you to test your API endpoints, observe the responses. You can go even further to create scripts and do automated testing.
@@ -44,18 +44,35 @@ To create a simple API you implement one or more HTTP methods, in this case the 
 
 ## Flask server
 
-Flask -> Flask-Restful	(simple)
-Flask -> Flask-Restplus	(adds classes and swagger)
-Flask -> Flask-RestX	(community fork of flask-restplus)
+- Ref: <https://blog.miguelgrinberg.com/post/the-flask-mega-tutorial-part-i-hello-world> (23 chapters!)
+- Ref: <https://dev.to/duomly/how-to-create-a-simple-rest-api-with-python-and-flask-in-5-minutes-3edg>
+- Ref: <https://pybit.es/simple-flask-api.html>
+- Ref: <https://pythonhosted.org/Flask-Security/>
 
-### run server in python virtual environment
+- Following is Ref: <https://medium.com/@onejohi/building-a-simple-rest-api-with-python-and-flask-b404371dc699>
+
+### server side
 
 ```
 $ python3 -m venv venv
 $ . venv/bin/activate
-$ python3 -m pip install -r requirements.txt
+$ python3 -m pip install Flask
+$ cat > minimal-flask-app.py <<EOM
+from flask import Flask
+app = Flask(__name__)
+app.config["DEBUG"] = True
+
+@app.route('/')
+def index():
+  return 'Server Works!'
+
+@app.route('/greet')
+def say_hello():
+  return 'Hello from Server'
+EOM
+
 $ export FLASK_ENV=development
-$ export FLASK_APP=flask-app.py
+$ export FLASK_APP=minimal-flask-app.py
 $ flask run
 ```
 
@@ -64,7 +81,56 @@ $ flask run
 ```
 $ unset http_proxy https_proxy HTTP_PROXY HTTPS_PROXY
 $ curl http://127.0.0.1:5000/
-$ curl http://127.0.0.1:5000/api-endpoint
+$ curl http://127.0.0.1:5000/greet
+```
+
+### app routing
+
+```
+$ cat > flask-app-routing.py <<EOM
+from flask import Flask
+app = Flask(__name__)
+
+@app.route('/')
+def index():
+  return 'Index Page'
+
+@app.route('/hello')
+def hello():
+  return 'Hello, greetings from different endpoint'
+
+#adding variables
+@app.route('/user/<username>')
+def show_user(username):
+  #returns the username
+  return 'Username: %s' % username
+
+@app.route('/post/<int:post_id>')
+def show_post(post_id):
+  #returns the post, the post_id should be an int
+  return str(post_id)
+EOM
+
+$ export FLASK_APP=flask-app-routing.py
+$ flask run
+```
+
+### GET, POST method
+
+```
+$ cat > methods.py <<EOM
+from flask import Flask, request
+app = Flask(__name__)
+
+@app.route('/login', methods=['GET','POST'])
+def login():
+  if request.method == 'POST':
+    #check user details from db
+    login_user()
+  elif request.method == 'GET':
+    #serve login page
+    serve_login_page()
+EOM
 ```
 
 ### Templates
@@ -536,3 +602,4 @@ curl -kLD - -u admin:password -H "Content-Type: application/json" -X PUT -d '{ "
 curl -kLD - -u admin:password  http://127.0.0.1:5000/api/v1.0/items
 curl -kLD - -H "Authorization: Bearer eyJhbGciOiJIUzUxMiIsImlhdCI6MTU5MzM0MzQxMSwiZXhwIjoxNTkzMzQ3MDEx9Q" http://127.0.0.1:5000/api/v1.0/items
 ```
+
