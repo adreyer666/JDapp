@@ -1,5 +1,11 @@
 #!/usr/bin/env python3
 
+"""
+Simple interface to a minimalistic authentication database store.
+
+Data is stored in a table in SQLite3.
+"""
+
 import sqlite3
 import datetime
 from pprint import pprint
@@ -22,22 +28,20 @@ def mydebug(*data):
 
 
 def dict_factory(cursor, row) -> dict:
-    """Mapping function."""
-    d = {}
+    """Map function. Make result rows accessible via column name."""
+    data = {}
     for idx, col in enumerate(cursor.description):
-        d[col[0]] = row[idx]
-    return d
+        data[col[0]] = row[idx]
+    return data
 
 
-class AuthDB(object):
+class AuthDB():
     """Extremely simple authentication DB object class."""
-
-    _db = None
-    _table = "auth"
 
     def __init__(self, uri=None):
         """Update internal class default values if needed."""
         self._db = uri or 'app.db'
+        self._table = "auth"
         try:
             conn = sqlite3.connect(self._db, uri=True, timeout=1000)
             mydebug("SQLite version", sqlite3.version)

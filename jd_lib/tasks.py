@@ -1,5 +1,12 @@
 #!/usr/bin/env python3
 
+"""
+Task list class and a task running class.
+
+Tasker is managing tasks in a job list, this is the public interface.
+CmdTask is executing tasks and fetching results.
+"""
+
 import os
 import stat
 import subprocess
@@ -12,7 +19,7 @@ from jd_lib import KeyValueDB
 # -------------- task queue -------------------------------------------------
 
 
-class Tasker(object):
+class Tasker():
     """Task object class for async start/monitor of external jobs."""
 
     verbose = 0
@@ -21,6 +28,7 @@ class Tasker(object):
     taskdir = None
 
     def __init__(self, verbose=None):
+        """Update internal class default values if needed."""
         if verbose:
             self.verbose = verbose
         # cwd = os.path.abspath(os.getcwd())
@@ -37,7 +45,11 @@ class Tasker(object):
             os.mkdir(self.taskdir)
 
     def _uuid(self) -> str:
-        return str(uuid4())
+        """Create new UUID as string."""
+        uuid = str(uuid4())
+        if self.verbose > 1:
+            print("New UUID: ", uuid)
+        return uuid
 
     def _job_update(self, job):
         """Store/update job in DB."""
@@ -68,6 +80,7 @@ class Tasker(object):
         return json.loads(res['value'])
 
     def add(self, params):
+        """Add new task to job list."""
         job = {
             "uuid": self._uuid(),
             "params": params,
@@ -85,6 +98,7 @@ class Tasker(object):
         return job['uuid']
 
     def fixer(self):
+        """Go through running tasks in job list and update status."""
         for uuid in self._job_query():
             job = self._job_query(uuid)
             cmd_task = CmdTask(job)
@@ -93,6 +107,7 @@ class Tasker(object):
             self._job_update(job)
 
     def status(self, uuid=None, verbose=False):
+        """Fetch status of a given task from job list."""
         if uuid is None:
             return self._job_query()
         job = self._job_query(uuid)
@@ -107,7 +122,7 @@ class Tasker(object):
 # --------- task object ------------------------------------------------------
 
 
-class CmdTask(object):
+class CmdTask():
     """Execute a task command."""
 
     badchars = {
@@ -116,6 +131,7 @@ class CmdTask(object):
     }
 
     def __init__(self, newtask, verbose=None):
+        """Update internal class default values if needed."""
         if task is None:
             return
         if verbose:
@@ -130,6 +146,7 @@ class CmdTask(object):
         self.task['cmdfile'] = '.'.join([self.task["location"], 'cmd'])
 
     def readfile(self, file) -> str:
+        """Read from file return contents or empty string."""
         if file:
             try:
                 if os.stat(file):
@@ -142,29 +159,38 @@ class CmdTask(object):
         return ''
 
     def writefile(self, file, data=None) -> bool:
+        """Write data to file, use empty string if no data provided."""
         if file:
             if data is None:
                 data = ''
-            with open(file, 'x', encoding='utf8') as file_handle:
-                file_handle.write(data)
+            try:
+                with open(file, 'x', encoding='utf8') as file_handle:
+                    file_handle.write(data)
+            except OSError as err:
+                if self.verbose > 1:
+                    print(err)
+                return False
         return True
 
     def run(self) -> int:
+        """Run a task."""
         if 'command' not in self.task['params']:
             return None
         if ('options' not in self.task['params']) or \
            (self.task['params']['options'] is None):
             self.task['params']['options'] = ''
         # primitive sanity ccheck for command and options
-        m = re.search(self.badchars['command'], self.task['params']['command'])
-        if m is not None:
-            print("Error: <command> pos: {}, ".format(m.start())
-                  + "invalid char '{}'".format(m.group(0)))
+        match = re.search(self.badchars['command'],
+                          self.task['params']['command'])
+        if match is not None:
+            print("Error: <command> pos: {}, ".format(match.start())
+                  + "invalid char '{}'".format(match.group(0)))
             return None
-        m = re.search(self.badchars['options'], self.task['params']['options'])
-        if m is not None:
-            print("Error: <options> pos: {}, ".format(m.start())
-                  + "invalid char '{}'".format(m.group(0)))
+        match = re.search(self.badchars['options'],
+                          self.task['params']['options'])
+        if match is not None:
+            print("Error: <options> pos: {}, ".format(match.start())
+                  + "invalid char '{}'".format(match.group(0)))
             return None
         # set some fallback values
         if 'input' not in self.task['params']:
@@ -209,6 +235,7 @@ class CmdTask(object):
         return pid
 
     def status(self, verbose=False) -> dict:
+        """Determine status of a task."""
         status = dict()
         if self.task is None:
             if self.verbose:

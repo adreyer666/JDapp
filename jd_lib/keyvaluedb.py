@@ -1,5 +1,11 @@
 #!/usr/bin/env python3
 
+"""
+Simple interface to a minimalistic Key/Value store.
+
+Data is stored in a table in SQLite3.
+"""
+
 import sqlite3
 import datetime
 
@@ -7,15 +13,18 @@ import datetime
 
 
 def dict_factory(cursor, row) -> dict:
+    """Map function. Make result rows accessible via column name."""
     data = {}
     for idx, col in enumerate(cursor.description):
         data[col[0]] = row[idx]
     return data
 
 
-class KeyValueDB(object):
+class KeyValueDB():
+    """Database class to contain all the necessary parameters and functions."""
 
     def __init__(self, table=None, uri=None, verbose=1):
+        """Update internal class default values."""
         if verbose:
             self._verbose = verbose
         else:
@@ -60,11 +69,12 @@ class KeyValueDB(object):
         return True
 
     def get(self, key=None) -> dict:
+        """Fetch a specific row from the database or a list of all keys."""
         conn = sqlite3.connect(self._db, uri=True)
         conn.row_factory = dict_factory
         cur = conn.cursor()
         if key is None:
-            """Query for list of keys."""
+            # Query for list of keys.
             query = 'SELECT key FROM {};'.format(self._table)
             cur.execute(query)
             entry = [r['key'] for r in cur.fetchall()]
@@ -72,7 +82,7 @@ class KeyValueDB(object):
             if self._verbose > 1:
                 print("entry", entry)
             return entry
-        """Query full entry matching key."""
+        # Query full entry matching key.
         query = 'SELECT value FROM {} WHERE key=?;'.format(self._table)
         entry = cur.execute(query, [key, ]).fetchone()
         conn.close()
@@ -81,6 +91,7 @@ class KeyValueDB(object):
         return entry
 
     def set(self, key=None, value=None) -> str:
+        """Insert or update a specific row defined by key."""
         if (key is None) or (value is None):
             return None
         conn = sqlite3.connect(self._db, uri=True)
@@ -90,12 +101,13 @@ class KeyValueDB(object):
         if self._verbose > 2:
             print("ENTRY: ", entry)
         if not entry:
-            q = 'INSERT INTO {} (value,ts,key) '.format(self._table) \
-                + 'VALUES (?,?,?);'
+            query = 'INSERT INTO {} '.format(self._table) \
+                    + '(value,ts,key) VALUES (?,?,?);'
         else:
-            q = 'UPDATE {} SET value=?, ts=? WHERE key=?;'.format(self._table)
+            query = 'UPDATE {} '.format(self._table) \
+                    + 'SET value=?, ts=? WHERE key=?;'
         param = [value, datetime.datetime.now(), key]
-        cur.execute(q, param)
+        cur.execute(query, param)
         conn.commit()
         conn.close()
         return key
