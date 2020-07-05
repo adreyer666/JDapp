@@ -1,5 +1,14 @@
 # JDapp .. playing with API and tasks
 
+**Challenge:**
+
+Write a Restful API that roughly mimics the API that Docker Engine provides..
+(current specs are [here](https://docs.docker.com/engine/api/v1.40/))
+
+**Warning:**
+This is for educational purposes only and not suitable for anything at all..
+
+
 ## API
 
 ### CRUD
@@ -37,7 +46,7 @@ To create a simple API you implement one or more HTTP methods, in this case the 
 @app.route('/api/v1.0/items/<int:id>', methods=['DELETE'])
 ```
 
-## API testing tool:
+## API testing tools:
 
 - [Postman](https://www.getpostman.com/) -- This tool basically allows you to test your API endpoints, observe the responses. You can go even further to create scripts and do automated testing.
 - [Insomnia](https://insomnia.rest/) -- An open source alternative to Postman. It comes with all the basic features you will need for API endpoints testing, and a better design IMO.
