@@ -10,7 +10,9 @@ CmdTask is executing tasks and fetching results.
 import os
 import json
 from uuid import uuid4
-from jd_lib import KeyValueDB, CmdTask
+# from jd_lib import KeyValueDB, CmdTask
+from .keyvaluedb import KeyValueDB
+from .cmdtask import CmdTask
 
 # -------------- task queue -------------------------------------------------
 

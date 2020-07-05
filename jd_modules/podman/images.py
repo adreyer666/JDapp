@@ -94,7 +94,7 @@ class Images(Resource):
         else:
             self.method_decorators = []
         if 'taskmgr' in kwargs:
-            self.taskmgr = kwargs['datadb']
+            self.taskmgr = kwargs['taskmgr']
         else:
             self.taskmgr = None
 
@@ -321,11 +321,10 @@ class Images(Resource):
         parser.add_argument("action")
         args = parser.parse_args()
 
+        item_list = None
         if 'action' not in args:
             item_list = self._list(uuid=item_id)
-        if not item_list:
-            return {"error": "Not found "+request.url}, 404
-        return {"images": item_list}, 200
+        return {"images": item_list or []}, 200
 
     def post(self, item_id=None):
         """Add item entry to DB."""

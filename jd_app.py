@@ -201,7 +201,7 @@ if __name__ == '__main__':
                      '/api/v1.0')
     api.add_resource(Items,
                      '/api/v1.0/items',
-                     '/api/v1.0/items/<int:id>',
+                     '/api/v1.0/items/<int:item_id>',
                      resource_class_kwargs={
                          'datadb': datadb,
                          'decorators': [multi_auth.login_required]
@@ -216,10 +216,11 @@ if __name__ == '__main__':
     #                  )
     api.add_resource(PodmanImages,
                      '/api/v1.0/podman/images',
-                     '/api/v1.0/podman/images/<str:uuid>',
+                     '/api/v1.0/podman/images/<string:item_id>',
                      resource_class_kwargs={
                          'decorators': [multi_auth.login_required],
-                         'taskmgr': taskmgr
+                         'taskmgr': taskmgr,
+                         'verbose': 3
                          }
                      )
 
