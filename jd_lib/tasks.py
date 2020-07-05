@@ -7,7 +7,7 @@ import re
 import json
 from uuid import uuid4
 from time import sleep
-from JDlib import KeyValueDB
+from jd_lib import KeyValueDB
 
 # -------------- task queue -------------------------------------------------
 

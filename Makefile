@@ -16,7 +16,7 @@ APPLICATION = jd_app
       phony = prep run package clean
 
 
-all:    prep run package clean
+all:    prep run test
 
 
 run:    venv $(APP) $(PYLIBS)
@@ -24,18 +24,20 @@ run:    venv $(APP) $(PYLIBS)
 
 venv: $(REQ)
 	python3 -m venv venv
+	( . venv/bin/activate && python -m pip install --upgrade pip )
 
 prep: venv
-	( . venv/bin/activate && pip install -r $(REQ) )
+	( . venv/bin/activate && test -f $(REQ) && python -m pip install --upgrade -r $(REQ) )
+	( . venv/bin/activate && python -m pip freeze > $(REQ) )
 
 edit: venv
+	( . venv/bin/activate && python -m pip install --upgrade 'python-language-server[all]' )
 	( . venv/bin/activate && atom . )
 
-# $(APP):
-# $(PYLIBS):
+test: venv
+	( . venv/bin/activate && python -m pip install flake8 pytest )
 
 package: $(REQ) $(APP) $(PYLIBS)
-	( . venv/bin/activate && pip freeze > $(REQ) )
 	tar -czvpSf $(APPLICATION)-$(VERSION).tgz Makefile $(APP) $(PYLIBS) $(REQ) $(DOCS)
 	sha256sum $(APPLICATION)-$(VERSION).tgz > $(APPLICATION)-$(VERSION).tgz.sha256sum
 
