@@ -14,6 +14,7 @@ from jd_lib import KeyValueDB
 
 class Tasker(object):
     """Task object class for async start/monitor of external jobs."""
+
     verbose = 0
     joblist = KeyValueDB(table='tasks')
     queue = None
@@ -35,7 +36,7 @@ class Tasker(object):
                 print(err)
             os.mkdir(self.taskdir)
 
-    def _uuid(self):
+    def _uuid(self) -> str:
         return str(uuid4())
 
     def _job_update(self, job):
@@ -74,8 +75,8 @@ class Tasker(object):
         }
         job["location"] = os.sep.join([self.taskdir, job['uuid']])
         self._job_update(job)
-        task = CmdTask(job)
-        pid = task.run()
+        cmd_task = CmdTask(job)
+        pid = cmd_task.run()
         if pid is None:
             return None
         if pid:
@@ -86,43 +87,40 @@ class Tasker(object):
     def fixer(self):
         for uuid in self._job_query():
             job = self._job_query(uuid)
-            task = CmdTask(job)
-            taskstate = task.status()
+            cmd_task = CmdTask(job)
+            taskstate = cmd_task.status()
             job['status'] = taskstate['status']
             self._job_update(job)
 
     def status(self, uuid=None, verbose=False):
         if uuid is None:
             return self._job_query()
-        else:
-            job = self._job_query(uuid)
-            task = CmdTask(job)
-            taskstate = task.status(verbose=verbose)
-            job['status'] = taskstate['status']
-            self._job_update(job)
-            if verbose:
-                taskstate['job'] = job
-            return taskstate
+        job = self._job_query(uuid)
+        cmd_task = CmdTask(job)
+        taskstate = cmd_task.status(verbose=verbose)
+        job['status'] = taskstate['status']
+        self._job_update(job)
+        if verbose:
+            taskstate['job'] = job
+        return taskstate
 
 # --------- task object ------------------------------------------------------
 
 
 class CmdTask(object):
     """Execute a task command."""
-    verbose = 0
+
     badchars = {
         'command': r"[^\d\w\t /.,]",
         'options': r"[^\d\w\t /.,'\"]",
     }
-    taskdir = None
-    task = None
 
-    def __init__(self, task, verbose=None):
+    def __init__(self, newtask, verbose=None):
         if task is None:
             return
         if verbose:
             self.verbose = verbose
-        self.task = task
+        self.task = newtask
         if "location" not in self.task:
             self.task["location"] = '.'
         self.task['in'] = '.'.join([self.task["location"], 'stdin'])
@@ -131,20 +129,27 @@ class CmdTask(object):
         self.task['res'] = '.'.join([self.task["location"], 'result'])
         self.task['cmdfile'] = '.'.join([self.task["location"], 'cmd'])
 
-    def readfile(self, file):
+    def readfile(self, file) -> str:
         if file:
-            with open(file, 'r', encoding='utf8') as x:
-                f = x.read()
-            return f
+            try:
+                if os.stat(file):
+                    with open(file, 'r', encoding='utf8') as file_handle:
+                        file_content = file_handle.read()
+                    return file_content
+            except FileNotFoundError as err:
+                if self.verbose > 1:
+                    print(err)
+        return ''
 
-    def writefile(self, file, data=None):
+    def writefile(self, file, data=None) -> bool:
         if file:
             if data is None:
                 data = ''
-            with open(file, 'x', encoding='utf8') as x:
-                x.write(data)
+            with open(file, 'x', encoding='utf8') as file_handle:
+                file_handle.write(data)
+        return True
 
-    def run(self):
+    def run(self) -> int:
         if 'command' not in self.task['params']:
             return None
         if ('options' not in self.task['params']) or \
@@ -153,13 +158,13 @@ class CmdTask(object):
         # primitive sanity ccheck for command and options
         m = re.search(self.badchars['command'], self.task['params']['command'])
         if m is not None:
-            print("Error: <command> pos: {}, ".format(m.start()) +
-                  "invalid char '{}'".format(m.group(0)))
+            print("Error: <command> pos: {}, ".format(m.start())
+                  + "invalid char '{}'".format(m.group(0)))
             return None
         m = re.search(self.badchars['options'], self.task['params']['options'])
         if m is not None:
-            print("Error: <options> pos: {}, ".format(m.start()) +
-                  "invalid char '{}'".format(m.group(0)))
+            print("Error: <options> pos: {}, ".format(m.start())
+                  + "invalid char '{}'".format(m.group(0)))
             return None
         # set some fallback values
         if 'input' not in self.task['params']:
@@ -193,8 +198,8 @@ class CmdTask(object):
             'echo $? > {}'.format(self.task['res'])
         ]
         self.writefile(self.task['cmdfile'], "\n".join(cmdscript))
-        RWX = stat.S_IRUSR | stat.S_IXUSR | stat.S_IWUSR
-        os.chmod(self.task['cmdfile'], RWX)
+        file_mode = stat.S_IRUSR | stat.S_IXUSR | stat.S_IWUSR
+        os.chmod(self.task['cmdfile'], file_mode)
         if self.verbose:
             print("Job", self.task)
         pid = subprocess.Popen([self.task['cmdfile'], ]).pid
@@ -203,39 +208,21 @@ class CmdTask(object):
         sleep(0.5)
         return pid
 
-    def status(self, verbose=False):
+    def status(self, verbose=False) -> dict:
+        status = dict()
         if self.task is None:
             if self.verbose:
                 print("invalid status")
-            return
-        status = dict()
+            return status
         status['status'] = self.task['status']
         if verbose:
-            try:
-                if os.stat(self.task['out']):
-                    status['output'] = self.readfile(self.task['out'])
-            except FileNotFoundError as err:
-                if self.verbose > 1:
-                    print(err)
-                pass
-            try:
-                if os.stat(self.task['err']):
-                    status['errors'] = self.readfile(self.task['err'])
-            except FileNotFoundError as err:
-                if self.verbose > 1:
-                    print(err)
-                pass
-        try:
-            if os.stat(self.task['res']):
-                status['RC'] = self.readfile(self.task['res']).rstrip()
-                if status['RC'] == 124:
-                    status['status'] = 'timed out'
-                else:
-                    status['status'] = 'finished'
-        except FileNotFoundError as err:
-            if self.verbose > 1:
-                print(err)
-            pass
+            status['output'] = self.readfile(self.task['out'])
+            status['errors'] = self.readfile(self.task['err'])
+        status['RC'] = self.readfile(self.task['res']).rstrip()
+        if status['RC'] == 124:
+            status['status'] = 'timed out'
+        else:
+            status['status'] = 'finished'
         return status
 
 
@@ -247,12 +234,12 @@ if __name__ == '__main__':
         "command": "echo",            # safe command only! sanity checks first!
         "options": "hello world"      # sofe options/parameters only!
     }
-    id = x.add(task)
+    tid = x.add(task)
     # always check return value!
-    if id is None:
+    if tid is None:
         print("Task aborted")
     print("Tasks running: {}".format(len(x.status())))
-    if id is not None:
-        print("Task status:   {}".format(x.status(id)))
+    if tid is not None:
+        print("Task status:   {}".format(x.status(tid)))
         print("Tasks running: {}".format(len(x.status())))
-        print("Task verbose status:\n{}".format(x.status(id, verbose=True)))
+        print("Task verbose status:\n{}".format(x.status(tid, verbose=True)))

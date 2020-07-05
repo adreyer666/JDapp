@@ -7,18 +7,19 @@ import datetime
 
 
 def dict_factory(cursor, row) -> dict:
-    d = {}
+    data = {}
     for idx, col in enumerate(cursor.description):
-        d[col[0]] = row[idx]
-    return d
+        data[col[0]] = row[idx]
+    return data
 
 
 class KeyValueDB(object):
-    _db = None
-    _table = None
-    _verbose = 0
 
     def __init__(self, table=None, uri=None, verbose=1):
+        if verbose:
+            self._verbose = verbose
+        else:
+            self._verbose = 0
         self._db = uri or 'app.db'
         self._table = table or 'kv'
         try:
@@ -63,9 +64,7 @@ class KeyValueDB(object):
         conn.row_factory = dict_factory
         cur = conn.cursor()
         if key is None:
-            """
-            query for list of keys
-            """
+            """Query for list of keys."""
             query = 'SELECT key FROM {};'.format(self._table)
             cur.execute(query)
             entry = [r['key'] for r in cur.fetchall()]
@@ -73,9 +72,7 @@ class KeyValueDB(object):
             if self._verbose > 1:
                 print("entry", entry)
             return entry
-        """
-        query full entry matching key
-        """
+        """Query full entry matching key."""
         query = 'SELECT value FROM {} WHERE key=?;'.format(self._table)
         entry = cur.execute(query, [key, ]).fetchone()
         conn.close()
@@ -93,8 +90,8 @@ class KeyValueDB(object):
         if self._verbose > 2:
             print("ENTRY: ", entry)
         if not entry:
-            q = 'INSERT INTO {} (value,ts,key) '.format(self._table) + \
-                    'VALUES (?,?,?);'
+            q = 'INSERT INTO {} (value,ts,key) '.format(self._table) \
+                + 'VALUES (?,?,?);'
         else:
             q = 'UPDATE {} SET value=?, ts=? WHERE key=?;'.format(self._table)
         param = [value, datetime.datetime.now(), key]

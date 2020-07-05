@@ -21,7 +21,7 @@ from jd_modules import Items
 
 DB = 'file:app.db'
 TOKENKEY = 'eyJhbGciOiJIUzUxMiIsImlhdCI6MTU5MzM0MzQxMSwiZXhwIjoxNTkzMzQ3MDEx9Q'
-DEBUGIT = True  # True # False
+DEBUGIT = False  # True # False
 
 
 # --------- debug ------------------------------------------------------------
@@ -82,6 +82,7 @@ class TopLevel(Resource):
 
     def __init__(self, *args, **kwargs):
         """Update internal class default values if needed."""
+        super().__init__(self, *args, **kwargs)
         self.debug = 0
         if self.debug > 2:
             print("args", args)
@@ -127,6 +128,7 @@ class ApiTop(Resource):
 
     def __init__(self, *args, **kwargs):
         """Update internal class default values if needed."""
+        super().__init__(self, *args, **kwargs)
         # if debug:
         #     self.debug = debug
         # else:

@@ -27,10 +27,14 @@ venv: $(REQ)
 	( . venv/bin/activate && python -m pip install --upgrade pip )
 
 prep: venv
-	( . venv/bin/activate && test -f $(REQ) && python -m pip install --upgrade -r $(REQ) )
-	( . venv/bin/activate && python -m pip freeze > $(REQ) )
+	( . venv/bin/activate \
+	&& test -f $(REQ) && python -m pip install --upgrade -r $(REQ) \
+	&& python -m pip freeze > $(REQ).tmp )
+	diff -qB $(REQ).tmp $(REQ) || cp $(REQ).tmp $(REQ)
+	rm $(REQ).tmp
 
 edit: venv
+	( . venv/bin/activate && python -m pip install --upgrade wheel )
 	( . venv/bin/activate && python -m pip install --upgrade 'python-language-server[all]' )
 	( . venv/bin/activate && atom . )
 

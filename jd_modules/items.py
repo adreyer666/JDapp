@@ -29,6 +29,7 @@ class Items(Resource):
         :param datadb:      backend database
         :returns str: An endpoint name
         """
+        super().__init__(self, *args, **kwargs)
         if 'verbose' in kwargs:
             self.verbose = kwargs['verbose']
         else:
