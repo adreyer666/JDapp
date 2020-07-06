@@ -1,0 +1,5 @@
+#!/bin/sh -f
+
+. venv/bin/activate
+python3 jd_app.py
+

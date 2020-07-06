@@ -13,33 +13,32 @@ APPLICATION = jd_app
      RUNENV = venv __pycache__ jd_lib/__pycache__ jd_modules/__pycache__
 # / ------ python stuff --------/ #
 
-      phony = prep run package clean
+      phony = venv test image run edit package clean
 
 
-all:    prep run test
+all:    venv test image run
 
-
-run:    venv $(APP) $(PYLIBS)
-	-( . venv/bin/activate && python3 $(APP) )
 
 venv: $(REQ)
 	python3 -m venv venv
-	( . venv/bin/activate && python -m pip install --upgrade pip )
-
-prep: venv
 	( . venv/bin/activate \
 	&& test -f $(REQ) && python -m pip install --upgrade -r $(REQ) \
 	&& python -m pip freeze > $(REQ).tmp )
 	diff -qB $(REQ).tmp $(REQ) || cp $(REQ).tmp $(REQ)
 	rm $(REQ).tmp
 
-edit: venv
-	( . venv/bin/activate && python -m pip install --upgrade wheel )
-	( . venv/bin/activate && python -m pip install --upgrade 'python-language-server[all]' )
-	( . venv/bin/activate && atom . )
-
 test: venv
 	( . venv/bin/activate && python -m pip install flake8 pytest )
+
+image: Dockerfile $(REQ) $(APP) $(PYLIBS)
+	buildah bud -f Dockerfile -t $(APPLICATION) .
+
+run: venv $(APP) $(PYLIBS) image
+	podman run -ti $(APPLICATION)
+
+edit: venv
+	( . venv/bin/activate && python -m pip install --upgrade 'python-language-server[all]' )
+	( . venv/bin/activate && atom . )
 
 package: $(REQ) $(APP) $(PYLIBS)
 	tar -czvpSf $(APPLICATION)-$(VERSION).tgz Makefile $(APP) $(PYLIBS) $(REQ) $(DOCS)
