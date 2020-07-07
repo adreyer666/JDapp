@@ -1,7 +1,7 @@
 #!env make
 
 APPLICATION = jd_app
-    VERSION = 0.1.0
+    VERSION = 0.1.1
 
 # / ------ python stuff --------/ #
         REQ = requirements.txt
@@ -13,11 +13,7 @@ APPLICATION = jd_app
      RUNENV = venv __pycache__ jd_lib/__pycache__ jd_modules/__pycache__
 # / ------ python stuff --------/ #
 
-      phony = venv test image run edit package clean
-
-
-all:    venv test image run
-
+all:    venv test run
 
 venv: $(REQ)
 	python3 -m venv venv
@@ -30,25 +26,34 @@ venv: $(REQ)
 test: venv
 	( . venv/bin/activate && python -m pip install flake8 pytest )
 
-image: Dockerfile $(REQ) $(APP) $(PYLIBS)
-	buildah bud -f Dockerfile -t $(APPLICATION) .
-
-debimage: Dockerfile.debian $(REQ) $(APP) $(PYLIBS)
-	buildah bud -f Dockerfile.debian -t $(APPLICATION) .
-
-run: venv $(APP) $(PYLIBS) image
-	podman run -p 5000:5000 -ti $(APPLICATION)
+run: venv $(APP) $(PYLIBS)
+	-( . venv/bin/activate && python $(APP) )
 
 edit: venv
 	( . venv/bin/activate && python -m pip install --upgrade 'python-language-server[all]' )
 	( . venv/bin/activate && atom . )
-
-package: $(REQ) $(APP) $(PYLIBS)
-	tar -czvpSf $(APPLICATION)-$(VERSION).tgz Makefile $(APP) $(PYLIBS) $(REQ) $(DOCS)
-	sha256sum $(APPLICATION)-$(VERSION).tgz > $(APPLICATION)-$(VERSION).tgz.sha256sum
 
 clobber: clean
 	-rm -r $(APPTMP)
 
 clean:
 	-rm -r $(RUNENV)
+
+# ------------------------------------------------------------------------------------------# 
+
+pyimage: Dockerfile $(REQ) $(APP) $(PYLIBS)
+	buildah bud -f Dockerfile -t py-$(APPLICATION) .
+
+runpyimage: $(APP) $(PYLIBS) image
+	podman run -p 5000:5000 -ti py-$(APPLICATION)
+
+debimage: Dockerfile.debian $(REQ) $(APP) $(PYLIBS)
+	buildah bud -f Dockerfile.debian -t deb-$(APPLICATION) .
+
+rundebimage: $(APP) $(PYLIBS) image
+	podman run -p 5000:5000 -ti deb-$(APPLICATION)
+
+package: $(REQ) $(APP) $(PYLIBS)
+	tar -czvpSf $(APPLICATION)-$(VERSION).tgz Makefile $(APP) $(PYLIBS) $(REQ) $(DOCS)
+	sha256sum $(APPLICATION)-$(VERSION).tgz > $(APPLICATION)-$(VERSION).tgz.sha256sum
+

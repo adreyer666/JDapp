@@ -13,6 +13,16 @@ Ref: <https://en.wikipedia.org/wiki/Create,_read,_update_and_delete>
 | Update (Modify)  | UPDATE | PUT / POST / PATCH | PUT        | write       | Update  |
 | Delete (Destroy) | DELETE | DELETE             | DELETE     | dispose     | Remove  |
 
+Ref: <https://www.restapitutorial.com/lessons/httpmethods.html>
+
+| HTTP Verb | CRUD           | Entire Collection (e.g. /customers) Specific Item (e.g. /customers/{id}) |
+| :-------- | :------------- | :----------------------------------------------------------------------- |
+| POST      | Create         | 201 (Created), 'Location' header with link to /customers/{id} containing new ID. 404 (Not Found), 409 (Conflict) if resource already exists.. |
+| GET       | Read           | 200 (OK), list of customers. Use pagination, sorting and filtering to navigate big lists. 200 (OK), single customer. 404 (Not Found), if ID not found or invalid. |
+| PUT       | Update/Replace | 405 (Method Not Allowed), unless you want to update/replace every resource in the entire collection. 200 (OK) or 204 (No Content). 404 (Not Found), if ID not found or invalid. |
+| PATCH     | Update/Modify  | 405 (Method Not Allowed), unless you want to modify the collection itself. 200 (OK) or 204 (No Content). 404 (Not Found), if ID not found or invalid. |
+| DELETE    | Delete         | 405 (Method Not Allowed), unless you want to delete the whole collection--not often desirable. 200 (OK). 404 (Not Found), if ID not found or invalid. |
+
 ## API code and endpoints
 
 Ref: <https://pybit.es/simple-flask-api.html>
@@ -27,22 +37,16 @@ To create a simple API you implement one or more HTTP methods, in this case the 
 @app.route('/api/v1.0/items/<int:id>', methods=['DELETE'])
 ```
 
-Ref: <https://www.restapitutorial.com/lessons/httpmethods.html>
-
-| HTTP Verb | CRUD           | Entire Collection (e.g. /customers) Specific Item (e.g. /customers/{id}) |
-| :-------- | :------------- | :----------------------------------------------------------------------- |
-| POST      | Create         | 201 (Created), 'Location' header with link to /customers/{id} containing new ID. 404 (Not Found), 409 (Conflict) if resource already exists.. |
-| GET       | Read           | 200 (OK), list of customers. Use pagination, sorting and filtering to navigate big lists. 200 (OK), single customer. 404 (Not Found), if ID not found or invalid. |
-| PUT       | Update/Replace | 405 (Method Not Allowed), unless you want to update/replace every resource in the entire collection. 200 (OK) or 204 (No Content). 404 (Not Found), if ID not found or invalid. |
-| PATCH     | Update/Modify  | 405 (Method Not Allowed), unless you want to modify the collection itself. 200 (OK) or 204 (No Content). 404 (Not Found), if ID not found or invalid. |
-| DELETE    | Delete         | 405 (Method Not Allowed), unless you want to delete the whole collection--not often desirable. 200 (OK). 404 (Not Found), if ID not found or invalid. |
-
-## API testing tool:
+## API testing tools:
 
 - [Postman](https://www.getpostman.com/) -- This tool basically allows you to test your API endpoints, observe the responses. You can go even further to create scripts and do automated testing.
 - [Insomnia](https://insomnia.rest/) -- An open source alternative to Postman. It comes with all the basic features you will need for API endpoints testing, and a better design IMO.
 
 ## Flask server
+
+Flask -> Flask-Restful		(simple)
+Flask -> Flask-Restplus	(adds classes and swagger)
+Flask -> Flask-RestX		(community fork of flask-restplus)
 
 - Ref: <https://blog.miguelgrinberg.com/post/the-flask-mega-tutorial-part-i-hello-world> (23 chapters!)
 - Ref: <https://dev.to/duomly/how-to-create-a-simple-rest-api-with-python-and-flask-in-5-minutes-3edg>
