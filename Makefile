@@ -33,8 +33,11 @@ test: venv
 image: Dockerfile $(REQ) $(APP) $(PYLIBS)
 	buildah bud -f Dockerfile -t $(APPLICATION) .
 
+debimage: Dockerfile.debian $(REQ) $(APP) $(PYLIBS)
+	buildah bud -f Dockerfile.debian -t $(APPLICATION) .
+
 run: venv $(APP) $(PYLIBS) image
-	podman run -ti $(APPLICATION)
+	podman run -p 5000:5000 -ti $(APPLICATION)
 
 edit: venv
 	( . venv/bin/activate && python -m pip install --upgrade 'python-language-server[all]' )
