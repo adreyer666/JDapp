@@ -10,7 +10,7 @@ APPLICATION = jd_app
        DOCS = README.md
 
      APPTMP = tasks/ app.db
-     RUNENV = venv __pycache__ jd_lib/__pycache__ jd_modules/__pycache__
+     RUNENV = venv
 # / ------ python stuff --------/ #
 
 all:    venv test run
@@ -38,6 +38,7 @@ clobber: clean
 
 clean:
 	-rm -r $(RUNENV)
+	-find -type d -name __pycache__ -exec rm -r '{}' ';'
 
 # ------------------------------------------------------------------------------------------# 
 
