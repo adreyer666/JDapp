@@ -1,7 +1,7 @@
 #!env make
 
 APPLICATION = jd_app
-    VERSION = 0.1.1
+    VERSION = 0.1.2
 
 # / ------ python stuff --------/ #
         REQ = requirements.txt
