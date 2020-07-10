@@ -14,6 +14,8 @@ There are two Dockerfile's for building images included:
 - Dockerfile.python3 utilizes the official python-3 image (~960 MB) and ends up around 1 GB.
 - Dockerfile.debian  utilizes the bullseye-slim image (~76 MB) and ends up around 440 MB.
 
+* Read more on the selection of [the right docker base image](https://pythonspeed.com/articles/base-image-python-docker-images/)..
+
 
 ## API
 

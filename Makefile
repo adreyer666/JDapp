@@ -41,8 +41,8 @@ clean:
 
 # ------------------------------------------------------------------------------------------# 
 
-pyimage: Dockerfile $(REQ) $(APP) $(PYLIBS)
-	buildah bud -f Dockerfile -t py-$(APPLICATION) .
+pyimage: Dockerfile.python3 $(REQ) $(APP) $(PYLIBS)
+	buildah bud -f Dockerfile.python3 -t py-$(APPLICATION) .
 
 runpyimage: $(APP) $(PYLIBS) image
 	podman run -p 5000:5000 -ti py-$(APPLICATION)
